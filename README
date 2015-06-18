@@ -6,4 +6,4 @@ edit RELEASE.local
 cd ..
 make
 
-Now read documentation/pvaClientCPP.html
+Now read documentation/pvaClientTestCPP.html

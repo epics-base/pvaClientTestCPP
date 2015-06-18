@@ -9,6 +9,7 @@ DIRS += test
 test_DEPEND_DIRS = configure
 
 DIRS += database
+EMBEDDED_TOPS := $(EMBEDDED_TOPS) $(filter-out $(EMBEDDED_TOPS), database)
 
 include $(TOP)/configure/RULES_TOP
 

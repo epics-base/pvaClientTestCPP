@@ -32,10 +32,10 @@ if __name__ == "__main__":
     curdir = os.getcwd()
     databaseControl = DatabaseControl()
     databaseControl.startDatabase()
-    time.sleep(6)
+    time.sleep(2)
     os.chdir(curdir + "/../test")
     print "curdir",os.getcwd()
     print "calling make runtests"
-    os.system("make runtests > temp")
+    os.system("make runtests")
     print "after make"
     databaseControl.stopDatabase()

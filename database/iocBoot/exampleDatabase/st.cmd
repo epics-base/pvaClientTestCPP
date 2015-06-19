@@ -16,8 +16,6 @@ dbLoadRecords("db/test.db")
 
 cd ${TOP}/iocBoot/${IOC}
 iocInit()
-dbl
 epicsThreadSleep(2.0)
 exampleDatabase
 startPVAServer
-pvdbl

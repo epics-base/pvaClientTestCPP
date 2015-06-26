@@ -9,6 +9,7 @@
 #include <epicsThread.h>
 #include <epicsUnitTest.h>
 
+int pvaClientTest(void);
 int pvaClientTestGetData(void);
 int pvaClientTestPutData(void);
 int pvaClientTestMonitorData(void);
@@ -20,6 +21,7 @@ int pvaClientTestNTMultiChannel(void);
 void easyAllTests(void)
 {
     testHarness();
+    runTest(pvaClientTest);
     runTest(pvaClientTestGetData);
     runTest(pvaClientTestPutData);
     runTest(pvaClientTestMonitorData);

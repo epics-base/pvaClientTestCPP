@@ -29,7 +29,7 @@ static StandardFieldPtr standardField = getStandardField();
 static PVDataCreatePtr pvDataCreate = getPVDataCreate();
 
 
-void testDouble()
+static void testDouble()
 {
     cout << "\nstarting testDouble\n";
     StructureConstPtr structure =
@@ -83,7 +83,7 @@ void testDouble()
     }
 }
 
-void testDoubleArray()
+static void testDoubleArray()
 {
     cout << "\nstarting testDoubleArray\n";
     StructureConstPtr structure =

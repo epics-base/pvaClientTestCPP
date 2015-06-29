@@ -39,7 +39,7 @@ testHarness_SRCS += pvaClientTestNTMultiChannel.cpp
 TESTS += pvaClientTestNTMultiChannel
 
 
-PROD_LIBS += pvaClient pvAccess pvData nt Com
+PROD_LIBS += pvaClient pvAccess nt pvData Com
 
 testHarness_SRCS += pvaClientAllTests.c
 

@@ -3,6 +3,11 @@
 TOP = ..
 include $(TOP)/configure/CONFIG
 
+TESTPROD_HOST += pvaClientTest
+pvaClientTest_SRCS = pvaClientTest 
+testHarness_SRCS += pvaClientTest.cpp 
+TESTS += pvaClientTest
+
 TESTPROD_HOST += pvaClientTestPutData
 pvaClientTestPutData_SRCS = pvaClientTestPutData 
 testHarness_SRCS += pvaClientTestPutData.cpp 

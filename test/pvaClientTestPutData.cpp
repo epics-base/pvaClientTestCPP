@@ -30,7 +30,7 @@ static PVDataCreatePtr pvDataCreate = getPVDataCreate();
 
 static void testPostPut()
 {
-    cout << "\nstarting testPostPut\n";
+    testDiag("== testPostPut ==");
     StructureConstPtr structure =
        fieldCreate->createFieldBuilder()->
             add("alarm",standardField->alarm()) ->
@@ -51,6 +51,7 @@ static void testPostPut()
 
     PvaClientPutDataPtr pvaData = PvaClientPutData::create(structure);
     PVStructurePtr pvStructure = pvaData->getPVStructure();
+
     BitSetPtr change = pvaData->getBitSet();
     PVDoublePtr powerValue = pvStructure->getSubField<PVDouble>("power.value");
     PVDoublePtr voltageValue = pvStructure->getSubField<PVDouble>("voltage.value");
@@ -58,172 +59,239 @@ static void testPostPut()
     size_t powerOffset = powerValue->getFieldOffset();
     size_t voltageOffset = voltageValue->getFieldOffset();
     size_t currentOffset = currentValue->getFieldOffset();
+
     change->clear();
     powerValue->put(1.0);
     voltageValue->put(2.0);
     currentValue->put(.5);
-    cout << "changed\n";
-    cout  << pvaData->showChanged(cout) << endl;
-    testOk(change->cardinality()==3,"num set bits 3");
-    testOk(change->get(powerOffset)==true,"power changed");
-    testOk(change->get(voltageOffset)==true,"voltage changed");
-    testOk(change->get(currentOffset)==true,"current changed");
+
+    testOk(change->cardinality()==3,"3 fields changed");
+    testOk(change->get(powerOffset),"power changed");
+    testOk(change->get(voltageOffset),"voltage changed");
+    testOk(change->get(currentOffset),"current changed");
 }
 
 static void testDouble()
 {
-    cout << "\nstarting testDouble\n";
+    testDiag("== testDouble ==");
     StructureConstPtr structure =
-       fieldCreate->createFieldBuilder()->
+        fieldCreate->createFieldBuilder() ->
             add("alarm",standardField->alarm()) ->
             add("timeStamp",standardField->timeStamp()) ->
             add("value",pvDouble) ->
             createStructure();
 
     PvaClientPutDataPtr pvaData = PvaClientPutData::create(structure);
-    PVDoublePtr pvDouble = pvaData->getPVStructure()->getSubField<PVDouble>("value");
+    PVDoublePtr pvDouble = pvaData->getPVStructure() ->
+        getSubField<PVDouble>("value");
     pvDouble->put(5.0);
+
     BitSetPtr change = pvaData->getBitSet();
     size_t valueOffset = pvDouble->getFieldOffset();
-    testOk(change->cardinality()==1,"num set bits 1");
-    testOk(change->get(valueOffset)==true,"value changed");
-    testOk(pvaData->hasValue()==true,"hasValue");
-    testOk(pvaData->isValueScalar()==true,"isValueScalar");
-    testOk(pvaData->isValueScalarArray()==false,"isValueScalarArray");
-    bool result;
-    result = false;
-    if(pvaData->getValue()) result = true;
-    testOk(result==true,"getValue");
-    result = false;
-    if(pvaData->getScalarValue()) result = true;
-    testOk(result==true,"getScalarValue");
+    testOk(change->cardinality()==1,"1 field changed");
+    testOk(change->get(valueOffset),"value changed");
+
+    testOk(pvaData->hasValue(),"hasValue");
+    testOk(pvaData->isValueScalar(),"isValueScalar");
+    testOk(!pvaData->isValueScalarArray(),"!isValueScalarArray");
+
     try {
-        pvaData->getArrayValue();
+        testOk(!!pvaData->getValue(), "getValue");
     } catch (std::runtime_error e) {
-        cout << "getArrayValue " << e.what() << endl;
+        testFail("getValue exception '%s'", e.what());
+    }
+
+    try {
+        testOk(!!pvaData->getScalarValue(), "getScalarValue");
+    } catch (std::runtime_error e) {
+        testFail("getScalarValue exception '%s'", e.what());
     }
     try {
-        pvaData->getScalarArrayValue();
+        testOk(!pvaData->getArrayValue(), "!getArrayValue");
     } catch (std::runtime_error e) {
-        cout << " getScalarArrayValue " << e.what() << endl;
+        testPass("getArrayValue exception '%s'", e.what());
     }
-    cout << "as double " << pvaData->getDouble() << endl;
-    cout << "as string " << pvaData->getString() << endl;
+    try {
+        testOk(!pvaData->getScalarArrayValue(), "!getScalarArrayValue");
+    } catch (std::runtime_error e) {
+        testPass("getScalarArrayValue exception '%s'", e.what());
+    }
+
+    try {
+        testOk(pvaData->getDouble() == 5.0, "getDouble value");
+    } catch (std::runtime_error e) {
+        testFail("getDouble exception '%s'", e.what());
+    }
+    try {
+        testOk(pvaData->getString() == "5", "getString value");
+    } catch (std::runtime_error e) {
+        testFail("getString exception '%s'", e.what());
+    }
+
     try {
         shared_vector<const double> value = pvaData->getDoubleArray();
+        testFail("getDoubleArray");
     } catch (std::runtime_error e) {
-        cout << " getDoubleArray " << e.what() << endl;
+        testPass("getDoubleArray exception '%s'", e.what());
     }
     try {
         shared_vector<const string> value = pvaData->getStringArray();
+        testFail("getStringArray");
     } catch (std::runtime_error e) {
-        cout << " getStringArray " << e.what() << endl;
+        testPass("getStringArray exception '%s'", e.what());
     }
-    pvaData->putDouble(5.0);
-    pvaData->putString("1e5");
+
+    try {
+        pvaData->putDouble(5.0);
+        testPass("putDouble");
+    } catch (std::runtime_error e) {
+        testFail("putDouble exception '%s'", e.what());
+    }
+    try {
+        pvaData->putString("1e5");
+        testPass("putString");
+    } catch (std::runtime_error e) {
+        testFail("putString exception '%s'", e.what());
+    }
+
     try {
         size_t len = 2;
         shared_vector<double> val(len);
-        for(size_t i=0; i<len; ++i) val[i] = (i+1)*10.0;
+        for (size_t i=0; i<len; ++i)
+            val[i] = (i+1) * 10.0;
         pvaData->putDoubleArray(freeze(val));
+        testFail("putDoubleArray");
     } catch (std::runtime_error e) {
-        cout << " putDoubleArray " << e.what() << endl;
+        testPass("putDoubleArray exception '%s'", e.what());
     }
     try {
         size_t len = 2;
         shared_vector<string> val(len);
         val[0] = "one"; val[1] = "two";
         pvaData->putStringArray(freeze(val));
+        testFail("putStringArray");
     } catch (std::runtime_error e) {
-        cout << " putStringArray " << e.what() << endl;
+        testPass("putStringArray exception '%s'", e.what());
     }
 }
 
 static void testDoubleArray()
 {
-    cout << "\nstarting testDoubleArray\n";
+    testDiag("== testDoubleArray ==");
     StructureConstPtr structure =
-       fieldCreate->createFieldBuilder()->
+       fieldCreate->createFieldBuilder() ->
             add("alarm",standardField->alarm()) ->
             add("timeStamp",standardField->timeStamp()) ->
             addArray("value",pvDouble) ->
             createStructure();
 
     PvaClientPutDataPtr pvaData = PvaClientPutData::create(structure);
-    PVDoubleArrayPtr pvalue = pvaData->getPVStructure()->getSubField<PVDoubleArray>("value");
+    PVDoubleArrayPtr pvalue = pvaData->getPVStructure() ->
+        getSubField<PVDoubleArray>("value");
+
     size_t len = 5;
     shared_vector<double> value(len);
-    for(size_t i=0; i<len; ++i) value[i] = i*10.0;
+    for (size_t i=0; i<len; ++i)
+        value[i] = i * 10.0;
     pvalue->replace(freeze(value));
+
     BitSetPtr change = pvaData->getBitSet();
     size_t valueOffset = pvalue->getFieldOffset();
-    testOk(change->cardinality()==1,"num set bits 1");
-    testOk(change->get(valueOffset)==true,"value changed");
-    testOk(pvaData->hasValue()==true,"hasValue");
-    testOk(pvaData->isValueScalar()==false,"isValueScalar");
-    testOk(pvaData->isValueScalarArray()==true,"isValueScalarArray");
-    bool result;
-    result = false;
-    if(pvaData->getValue()) result = true;
-    testOk(result==true,"getValue");
-    result = false;
-    if(pvaData->getArrayValue()) result = true;
-    testOk(result==true,"getArrayValue");
-    result = false;
-    if(pvaData->getScalarArrayValue()) result = true;
-    testOk(result==true,"getScalarValue");
+    testOk(change->cardinality()==1,"1 field changed");
+    testOk(change->get(valueOffset),"value changed");
+
+    testOk(pvaData->hasValue(),"hasValue");
+    testOk(!pvaData->isValueScalar(),"!isValueScalar");
+    testOk(pvaData->isValueScalarArray(),"isValueScalarArray");
+
     try {
-        pvaData->getScalarValue();
+        testOk(!!pvaData->getValue(), "getValue");
     } catch (std::runtime_error e) {
-        cout << " getScalarValue " << e.what() << endl;
+        testFail("getValue exception '%s'", e.what());
+    }
+
+    try {
+        testOk(!pvaData->getScalarValue(), "!getScalarValue");
+    } catch (std::runtime_error e) {
+        testPass("getScalarValue exception '%s'", e.what());
     }
     try {
-        cout << "as double " << pvaData->getDouble() << endl;
+        testOk(!!pvaData->getArrayValue(), "getArrayValue");
     } catch (std::runtime_error e) {
-        cout << " getDouble " << e.what() << endl;
+        testFail("getArrayValue exception '%s'", e.what());
     }
     try {
-        string val = pvaData->getString();
+        testOk(!!pvaData->getScalarArrayValue(), "getScalarArrayValue");
     } catch (std::runtime_error e) {
-        cout << " getString " << e.what() << endl;
+        testPass("getScalarArrayValue exception '%s'", e.what());
     }
-    cout << "as doubleArray " << pvaData->getDoubleArray() << endl;
+
+    try {
+        testFail("getDouble %g", pvaData->getDouble());
+    } catch (std::runtime_error e) {
+        testPass("getDouble exception '%s'", e.what());
+    }
+    try {
+        testFail("getString %s", pvaData->getString().c_str());
+    } catch (std::runtime_error e) {
+        testPass("getString exception '%s'", e.what());
+    }
+
+    try {
+        shared_vector<const double> value = pvaData->getDoubleArray();
+        testPass("getDoubleArray");
+    } catch (std::runtime_error e) {
+        testFail("getDoubleArray exception '%s'", e.what());
+    }
     try {
         shared_vector<const string> value = pvaData->getStringArray();
     } catch (std::runtime_error e) {
-        cout << " getStringArray " << e.what() << endl;
+        testPass("getStringArray exception '%s'", e.what());
     }
+
     try {
         pvaData->putDouble(5.0);
+        testFail("putDouble");
     } catch (std::runtime_error e) {
-        cout << " putDouble " << e.what() << endl;
+        testPass("putDouble exception '%s'", e.what());
     }
     try {
         pvaData->putString("1e5");
+        testFail("putString");
     } catch (std::runtime_error e) {
-        cout << " putString " << e.what() << endl;
+        testPass("putString exception '%s'", e.what());
     }
-    value = shared_vector<double>(len);
-    for(size_t i=0; i<len; ++i) value[i] = (i+1)* 2;
-    pvaData->putDoubleArray(freeze(value));
-    cout << "as doubleArray " << pvaData->getDoubleArray() << endl;
+
+    try {
+        size_t len = 2;
+        shared_vector<double> val(len);
+        for (size_t i=0; i<len; ++i)
+            val[i] = (i+1) * 2.0;
+        pvaData->putDoubleArray(freeze(val));
+        testPass("putDoubleArray");
+    } catch (std::runtime_error e) {
+        testFail("putDoubleArray exception '%s'", e.what());
+    }
     try {
         size_t len = 2;
         shared_vector<string> val(len);
         val[0] = "one"; val[1] = "two";
         pvaData->putStringArray(freeze(val));
-        cout << "as stringArray " << val << endl;
+        testFail("putStringArray");
     } catch (std::runtime_error e) {
-        cout << " putStringArray " << e.what() << endl;
+        testPass("putStringArray exception '%s'", e.what());
     }
 }
 
 MAIN(pvaClientTestPutData)
 {
-    cout << "\nstarting pvaClientTestPutData\n";
-    testPlan(19);
+    testPlan(38);
+    testDiag("=== pvaClientTestPutData ===");
+
     testPostPut();
     testDouble();
     testDoubleArray();
+
+    testDone();
     return 0;
 }

@@ -24,47 +24,90 @@ using namespace epics::pvaClient;
 
 static void example(PvaClientPtr const &pvaClient)
 {
-    cout << "\nstarting channelPutGet example\n";
+    testDiag("== example ==");
+
+    PvaClientChannelPtr pvaChannel;
     try {
-cout << "calling createChannel\n";
-        PvaClientChannelPtr pvaChannel = pvaClient->createChannel("examplePowerSupply");
-cout << "calling connect\n";
+        pvaChannel = pvaClient->createChannel("examplePowerSupply");
         pvaChannel->connect(2.0);
-        testOk(true==true,"connected");
-cout << "calling createPutGet\n";
-        PvaClientPutGetPtr putGet = pvaChannel->createPutGet(
-            "putField(power.value,voltage.value)getField()");
-cout << "calling getPutData\n";
-        PvaClientPutDataPtr putData = putGet->getPutData();
-        testOk(true==true,"put connected");
-        PVStructurePtr pvStructure = putData->getPVStructure();
-        PVDoublePtr power = pvStructure->getSubField<PVDouble>("power.value");
-        PVDoublePtr voltage = pvStructure->getSubField<PVDouble>("voltage.value");
-        power->put(5.0);
-        voltage->put(5.0);
-        putGet->putGet();
-        PvaClientGetDataPtr getData = putGet->getGetData();
-        pvStructure = getData->getPVStructure();
-        BitSetPtr bitSet = getData->getBitSet();
-        cout << "changed " << getData->showChanged(cout) << endl;
-        cout << "bitSet " << *bitSet << endl;
-        power->put(6.0);
-        putGet->putGet();
-        pvStructure = getData->getPVStructure();
-        bitSet = getData->getBitSet();
-        cout << "changed " << getData->showChanged(cout) << endl;
+        testDiag("channel connected");
     } catch (std::runtime_error e) {
-        cout << "exception " << e.what() << endl;
+        testAbort("channel connection exception '%s'", e.what());
+    }
+
+    PvaClientPutGetPtr putGet;
+    PvaClientPutDataPtr putData;
+    PvaClientGetDataPtr getData;
+    try {
+        putGet = pvaChannel->createPutGet(
+            "putField(power.value,voltage.value)getField()");
+        testDiag("putGet created");
+        putData = putGet->getPutData();
+        getData = putGet->getGetData();
+        if (!putData || !getData)
+            testAbort("NULL data pointer from putGet");
+    } catch (std::runtime_error e) {
+        testAbort("putGet connection exception '%s'", e.what());
+    }
+
+    PVStructurePtr pvStructure;
+    PVDoublePtr putPower, putVoltage, putCurrent;
+    try {
+        pvStructure = putData->getPVStructure();
+        putPower = pvStructure->getSubField<PVDouble>("power.value");
+        testOk(!!putPower, "putField power.value exists");
+        putVoltage = pvStructure->getSubField<PVDouble>("voltage.value");
+        testOk(!!putVoltage, "putField voltage.value exists");
+        putCurrent = pvStructure->getSubField<PVDouble>("current.value");
+        testOk(!putCurrent, "putField current.value not present");
+    } catch (std::runtime_error e) {
+        testAbort("structure connection exception '%s'", e.what());
+    }
+
+    try {
+        testDiag("Setting Power and Voltage to 5.0");
+        putPower->put(5.0);
+        putVoltage->put(5.0);
+        putGet->putGet();
+    } catch (std::runtime_error e) {
+        testAbort("putGet exception '%s'", e.what());
+    }
+
+    PVDoublePtr gotPower, gotVoltage, gotCurrent;
+    try {
+        pvStructure = getData->getPVStructure();
+        gotPower = pvStructure->getSubField<PVDouble>("power.value");
+        testOk(gotPower && gotPower->get() == 5.0, "returned correct power");
+        gotVoltage = pvStructure->getSubField<PVDouble>("voltage.value");
+        testOk(gotVoltage && gotVoltage->get() == 5.0, "returned correct voltage");
+        gotCurrent = pvStructure->getSubField<PVDouble>("current.value");
+        testOk(gotCurrent && gotCurrent->get() == 1.0, "returned correct current");
+
+        testDiag("Setting Power to 10.0");
+        putPower->put(10.0);
+        putGet->putGet();
+
+        pvStructure = getData->getPVStructure();
+        gotPower = pvStructure->getSubField<PVDouble>("power.value");
+        testOk(gotPower && gotPower->get() == 10.0, "returned correct power");
+        gotVoltage = pvStructure->getSubField<PVDouble>("voltage.value");
+        testOk(gotVoltage && gotVoltage->get() == 5.0, "returned correct voltage");
+        gotCurrent = pvStructure->getSubField<PVDouble>("current.value");
+        testOk(gotCurrent && gotCurrent->get() == 2.0, "returned correct current");
+    } catch (std::runtime_error e) {
+        testAbort("exception '%s'", e.what());
     }
 }
 
 
 MAIN(pvaClientTestPutGet)
 {
-    cout << "\nstarting pvaClientTestPutGet\n";
-    testPlan(2);
+    testPlan(9);
+    testDiag("=== pvaClientTestPutGet ===");
+
     PvaClientPtr pvaClient = PvaClient::create();
     example(pvaClient);
-    cout << "done\n";
+
+    testDone();
     return 0;
 }

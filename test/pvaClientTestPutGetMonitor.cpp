@@ -14,6 +14,7 @@
 
 #include <pv/pvaClient.h>
 #include <epicsUnitTest.h>
+#include <epicsThread.h>
 #include <testMain.h>
 
 using namespace std;
@@ -21,69 +22,114 @@ using namespace epics::pvData;
 using namespace epics::pvAccess;
 using namespace epics::pvaClient;
 
+BitSet expected;
 
 class MyMonitor : public PvaClientMonitorRequester
 {
 public:
-     MyMonitor() {}
-     virtual ~MyMonitor() {}
-     virtual void event(PvaClientMonitorPtr monitor)
-     {
-         while(true) {
-            if(!monitor->poll()) return;
-            PvaClientMonitorDataPtr pvaData = monitor->getData();
-            cout << "changed\n";
-            pvaData->showChanged(cout);
-            cout << "overrun\n";
-            pvaData->showOverrun(cout);
+    MyMonitor() {}
+    virtual ~MyMonitor() {}
+    virtual void event(PvaClientMonitorPtr monitor)
+    {
+        testDiag("monitor event");
+        PvaClientMonitorDataPtr pvaData = monitor->getData();
+        while (monitor->poll()) {
+            if (!testOk(*pvaData->getChangedBitSet() == expected,
+                "expected fields changed")) {
+                cout << "# changed = " << *pvaData->getChangedBitSet() << endl;
+                cout << "# expected = " << expected << endl;
+            }
+            testOk(pvaData->getOverrunBitSet()->isEmpty(), "No overrun");
             monitor->releaseEvent();
-            
-         }
-     }
+        }
+    }
 };
 
 static void exampleDouble(PvaClientPtr const &pvaClient)
 {
-    cout << "\nstarting exampleDouble\n";
+    testDiag("== exampleDouble ==");
+
+    PvaClientChannelPtr pvaChannel;
     try {
-        cout << "long way\n";
-        PvaClientChannelPtr pvaChannel = pvaClient->createChannel("exampleDouble");
+        pvaChannel = pvaClient->createChannel("exampleDouble");
         pvaChannel->connect(2.0);
-        testOk(true==true,"connected");
-        PvaClientPutPtr put = pvaChannel->createPut();
-        PvaClientPutDataPtr putData = put->getData();
-        testOk(true==true,"put connected");
-        PvaClientGetPtr get = pvaChannel->createGet();
-        PvaClientGetDataPtr getData = get->getData();
-        testOk(true==true,"get connected");
-        PvaClientMonitorRequesterPtr requester(new MyMonitor());
-        PvaClientMonitorPtr monitor = pvaChannel->monitor(requester);
-        testOk(true==true,"monitor connected");
-        double out;
-        double in;
-        for(size_t i=0 ; i< 5; ++i) {
-             out = i;
-             putData->putDouble(out);
-             put->put();
-             get->get();
-             in = getData->getDouble();
-             cout << "out " << out << " in " << in << endl;
+        testDiag("channel connected");
+    } catch (std::runtime_error e) {
+        testAbort("channel connection exception '%s'", e.what());
+    }
+
+    PvaClientPutPtr put;
+    PvaClientPutDataPtr putData;
+    try {
+        put = pvaChannel->createPut();
+        putData = put->getData();
+        testDiag("put connected");
+        if (!putData)
+            testAbort("NULL data pointer from putGet");
+    } catch (std::runtime_error e) {
+        testAbort("put connection exception '%s'", e.what());
+    }
+
+    PvaClientGetPtr get;
+    PvaClientGetDataPtr getData;
+    try {
+        get = pvaChannel->createGet();
+        getData = get->getData();
+        testDiag("get connected");
+        if (!getData)
+            testAbort("NULL data pointer from putGet");
+    } catch (std::runtime_error e) {
+        testAbort("get connection exception '%s'", e.what());
+    }
+
+    PvaClientMonitorRequesterPtr requester(new MyMonitor());
+    PvaClientMonitorPtr monitor;
+    expected.set(0);        // structure definition
+    try {
+        monitor = pvaChannel->monitor(requester);
+        testDiag("monitor connected");
+    } catch (std::runtime_error e) {
+        testAbort("monitor connection exception '%s'", e.what());
+    }
+    epicsThreadSleep(0.1);  // Allow connection monitor event to fire
+
+    expected.clear();       // FIXME: Magic numbers here...
+    expected.set(1);        // value
+    expected.set(6);        // timestamp
+
+    try {
+        for (int i=0; i<5; ++i) {
+            testDiag("= put %d =", i);
+
+            double out = i;
+            putData->putDouble(out);
+            put->put();
+
+            get->get();
+            double in = getData->getDouble();
+            testOk(in == out, "get value matches put");
         }
+
         PvaClientProcessPtr process = pvaChannel->createProcess();
         process->connect();
+
+        testDiag("= process =");
+        expected.clear(1);  // no value change
         process->process();
     } catch (std::runtime_error e) {
-        cout << "exception " << e.what() << endl;
+        testAbort("exception '%s'", e.what());
     }
 }
 
 
 MAIN(pvaClientTestPutGetMonitor)
 {
-    cout << "\nstarting pvaClientTestPutGetMonitor\n";
-    testPlan(4);
+    testPlan(19);
+    testDiag("=== pvaClientTestPutGetMonitor ===");
+
     PvaClientPtr pvaClient = PvaClient::create();
     exampleDouble(pvaClient);
-    cout << "done\n";
+
+    testDone();
     return 0;
 }

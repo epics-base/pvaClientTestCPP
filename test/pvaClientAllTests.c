@@ -9,6 +9,7 @@
 #include <epicsThread.h>
 #include <epicsUnitTest.h>
 
+int pvaClientTest(void);
 int pvaClientTestGetData(void);
 int pvaClientTestPutData(void);
 int pvaClientTestMonitorData(void);
@@ -23,6 +24,7 @@ void pvaClientAllTests(void)
 
     /* Start the IOC here ... */
 
+    runTest(pvaClientTest);
     runTest(pvaClientTestGetData);
     runTest(pvaClientTestPutData);
     runTest(pvaClientTestMonitorData);

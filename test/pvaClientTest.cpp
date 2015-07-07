@@ -34,7 +34,7 @@ public:
         string const & message,
         MessageType messageType)
     {
-        cout << "RequesterImpl::message " << message << endl;
+        testDiag("message: '%s'", message.c_str());
     }
     void destroy() {}
 };
@@ -42,54 +42,66 @@ public:
 
 static void example(PvaClientPtr const &pva)
 {
-    cout << "\nstarting channel example\n";
+    testDiag("== requester and cache tests ==");
+
     RequesterPtr requester(new RequesterImpl());
     pva->setRequester(requester);
     pva->message("this is a test",infoMessage);
     testOk(pva->getRequesterName()=="RequesterImpl","getRequesterName");
+
     pva->clearRequester();
-    pva->message("this is a test",infoMessage);
+    pva->message("# this is a test",infoMessage);
     testOk(pva->getRequesterName()=="pvaClient","getRequesterName");
-    double value = 0.0;
+
     try {
-        value =  pva->channel("double01")->get()->getData()->getDouble();
-        cout << "value " << value << endl;
-        cout << "after default provider\n";
-        pva->showCache();
+        // connect with pvAccess
+        double value = pva->channel("double01")
+            -> get() -> getData() -> getDouble();
+        testDiag("value = %g", value);
+        // after default provider:
         testOk(pva->cacheSize()==1,"cacheSize should be 1");
-        value =  pva->channel("double01","ca",2.0)->get()->getData()->getDouble();
-        cout << "after ca provider\n";
-        pva->showCache();
+
+        value = pva->channel("double01","ca",2.0)
+            -> get() -> getData() -> getDouble();
+        // after ca provider
+        // pva->showCache();
         testOk(pva->cacheSize()==2,"cacheSize should be 2");
-        value =  pva->channel("double01")->get()->getData()->getDouble();
-        value =  pva->channel("double01","ca",2.0)->get()->getData()->getDouble();
-        cout << "after two more requests\n";
-        pva->showCache();
+
+        value = pva->channel("double01")
+            -> get() -> getData() -> getDouble();
+        value = pva->channel("double01","ca",2.0)
+            -> get() -> getData() -> getDouble();
+        // after two more requests
+        // pva->showCache();
         testOk(pva->cacheSize()==2,"cacheSize should still be 2");
+
         PvaClientChannelPtr pvaChannel = pva->createChannel("string01");
         pvaChannel->connect();
         PvaClientGetPtr pvaGet = pvaChannel->createGet();
         PvaClientPutPtr pvaPut = pvaChannel->createPut();
         pvaGet->connect();
         pvaPut->connect();
+
         PvaClientPutDataPtr pvaPutData = pvaPut->getData();
         pvaPutData->putString("test");
         pvaPut->put();
         pvaGet->get();
-        cout << pvaGet->getData()->getString() << endl;
-        testOk(pva->cacheSize()==2,"cacheSize should be 2 after pvaGet and pvaPut");
+        testOk(pvaGet->getData()->getString() == "test", "string round-trip");
+        testOk(pva->cacheSize()==2,"cacheSize should be 2");
     } catch (std::runtime_error e) {
-        cout << "exception " << e.what() << endl;
+        testAbort("channel example exception '%s'", e.what());
     }
 }
 
 
 MAIN(pvaClientTest)
 {
-    cout << "\nstarting pvaClientTest\n";
-    testPlan(6);
+    testPlan(7);
+    testDiag("=== pvaClientTest ===");
+
     PvaClientPtr pvaClient = PvaClient::create();
     example(pvaClient);
-    cout << "done\n";
+
+    testDone();
     return 0;
 }

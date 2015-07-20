@@ -24,10 +24,8 @@ using namespace epics::pvaClient;
 
 static void testGood(PvaClientPtr const &pvaClient)
 {
-    bool isOk = true;
-    cout << "\nstarting testGood\n";
+    testDiag("== testGood ==");
     try {
-        PvaClientPtr pvaClient(PvaClient::create());
         size_t num = 5;
         shared_vector<string> channelNames(num);
         channelNames[0] = "exampleDouble01";
@@ -35,29 +33,31 @@ static void testGood(PvaClientPtr const &pvaClient)
         channelNames[2] = "exampleDouble03";
         channelNames[3] = "exampleDouble04";
         channelNames[4] = "exampleDouble05";
+
         PVStringArrayPtr pvNames =
             getPVDataCreate()->createPVScalarArray<PVStringArray>();
         pvNames->replace(freeze(channelNames));
+
         PvaClientMultiDoublePtr multiDouble(PvaClientMultiDouble::create(pvaClient,pvNames));
         shared_vector<double> data = multiDouble->get();
-        cout << "initial " << data << endl;
-        for(size_t i=0; i<num; ++i) data[i] = data[i] + 1.1;
+        cout << "# initial " << data << endl;
+
+        for (size_t i=0; i<num; ++i)
+            data[i] = data[i] + 1.1;
         multiDouble->put(data);
         data =  multiDouble->get();
-        cout << "final " << data << endl;
+        cout << "# final " << data << endl;
+
+        testPass("native channels");
     } catch (std::runtime_error e) {
-        cout << "exception " << e.what() << endl;
-        isOk = false;
+        testFail("testGood exception '%s'", e.what());
     }
-    testOk(isOk==true,"all channels double");
 }
 
 static void testGoodMixed(PvaClientPtr const &pvaClient)
 {
-    bool isOk = true;
-    cout << "\nstarting testGoodMixed\n";
+    testDiag("== testGoodMixed ==");
     try {
-        PvaClientPtr pvaClient(PvaClient::create());
         size_t num = 5;
         shared_vector<string> channelNames(num);
         channelNames[0] = "exampleByte";
@@ -65,59 +65,63 @@ static void testGoodMixed(PvaClientPtr const &pvaClient)
         channelNames[2] = "exampleInt";
         channelNames[3] = "exampleFloat";
         channelNames[4] = "exampleDouble";
+
         PVStringArrayPtr pvNames =
             getPVDataCreate()->createPVScalarArray<PVStringArray>();
         pvNames->replace(freeze(channelNames));
+
         PvaClientMultiDoublePtr multiDouble(PvaClientMultiDouble::create(pvaClient,pvNames));
         shared_vector<double> data = multiDouble->get();
-        cout << "initial " << data << endl;
-        for(size_t i=0; i<num; ++i) data[i] = data[i] + 1.1;
+        cout << "# initial " << data << endl;
+
+        for (size_t i=0; i<num; ++i)
+            data[i] += 1.1;
         multiDouble->put(data);
         data =  multiDouble->get();
-        cout << "final " << data << endl;
+        cout << "# final " << data << endl;
+
+        testPass("mixed channels");
     } catch (std::runtime_error e) {
-        cout << "exception " << e.what() << endl;
-        isOk = false;
+        testFail("testGoodMixed exception '%s'", e.what());
     }
-    testOk(isOk==true,"channels mixed type");
 }
 
 static void testChannelNotExist(PvaClientPtr const &pvaClient)
 {
-    bool isOk = true;
-    cout << "\nstarting testChannelNotExist\n";
+    testDiag("== testChannelNotExist ==");
     try {
-        PvaClientPtr pvaClient(PvaClient::create());
         size_t num = 5;
         shared_vector<string> channelNames(num);
         channelNames[0] = "exampleDouble01";
         channelNames[1] = "exampleDouble02";
         channelNames[2] = "exampleDouble03";
-        channelNames[3] = "NoneExistChannel";
+        channelNames[3] = "NonExistChannel";
         channelNames[4] = "exampleDouble05";
+
         PVStringArrayPtr pvNames =
             getPVDataCreate()->createPVScalarArray<PVStringArray>();
         pvNames->replace(freeze(channelNames));
+
         PvaClientMultiDoublePtr multiDouble(PvaClientMultiDouble::create(pvaClient,pvNames));
         shared_vector<double> data = multiDouble->get();
-        cout << "initial " << data << endl;
-        for(size_t i=0; i<num; ++i) data[i] = data[i] + 1.1;
+        cout << "# initial " << data << endl;
+
+        for (size_t i=0; i<num; ++i)
+            data[i] += 1.1;
         multiDouble->put(data);
         data =  multiDouble->get();
-        cout << "final " << data << endl;
+        cout << "# final " << data << endl;
+
+        testFail("non-existent channel found!");
     } catch (std::runtime_error e) {
-        cout << "exception " << e.what() << endl;
-        isOk = false;
+        testPass("testChannelNotExist exception '%s'", e.what());
     }
-    testOk(isOk==false,"channel not exist");
 }
 
-static void testNonNumeric(PvaClientPtr const &pvaClient)
+static void testNonScalar(PvaClientPtr const &pvaClient)
 {
-    bool isOk = true;
-    cout << "\nstarting testNonNumeric\n";
+    testDiag("== testNonScalar ==");
     try {
-        PvaClientPtr pvaClient(PvaClient::create());
         size_t num = 5;
         shared_vector<string> channelNames(num);
         channelNames[0] = "exampleDouble01";
@@ -125,32 +129,38 @@ static void testNonNumeric(PvaClientPtr const &pvaClient)
         channelNames[2] = "exampleDouble03";
         channelNames[3] = "exampleDouble04";
         channelNames[4] = "exampleDouble05Array";
+
         PVStringArrayPtr pvNames =
             getPVDataCreate()->createPVScalarArray<PVStringArray>();
         pvNames->replace(freeze(channelNames));
+
         PvaClientMultiDoublePtr multiDouble(PvaClientMultiDouble::create(pvaClient,pvNames));
         shared_vector<double> data = multiDouble->get();
-        cout << "initial " << data << endl;
-        for(size_t i=0; i<num; ++i) data[i] = data[i] + 1.1;
+        cout << "# initial " << data << endl;
+
+        for (size_t i=0; i<num; ++i)
+            data[i] += 1.1;
         multiDouble->put(data);
         data =  multiDouble->get();
-        cout << "final " << data << endl;
+        cout << "# final " << data << endl;
+
+        testFail("non-scalar channel allowed!");
     } catch (std::runtime_error e) {
-        cout << "exception " << e.what() << endl;
-        isOk = false;
+        testPass("testNonScalar exception '%s'", e.what());
     }
-    testOk(isOk==false,"channel not numeric");
 }
 
 MAIN(pvaClientTestMultiDouble)
 {
-    cout << "\nstarting pvaClientTestMultiDouble\n";
     testPlan(4);
+    testDiag("=== pvaClientTestMultiDouble ===");
+
     PvaClientPtr pvaClient = PvaClient::create();
     testGood(pvaClient);
     testGoodMixed(pvaClient);
     testChannelNotExist(pvaClient);
-    testNonNumeric(pvaClient);
-    cout << "done\n";
+    testNonScalar(pvaClient);
+
+    testDone();
     return 0;
 }

@@ -18,16 +18,21 @@ int pvaClientTestPutGet(void);
 int pvaClientTestMultiDouble(void);
 int pvaClientTestNTMultiChannel(void);
 
-void easyAllTests(void)
+void pvaClientAllTests(void)
 {
     testHarness();
+
+    /* Start the IOC here ... */
+
     runTest(pvaClientTest);
     runTest(pvaClientTestGetData);
     runTest(pvaClientTestPutData);
     runTest(pvaClientTestMonitorData);
-    runTest(pvaClientTestPutMonitor);
-    runTest(pvaClientTestPut);
+    runTest(pvaClientTestPutGetMonitor);
+    runTest(pvaClientTestPutGet);
     runTest(pvaClientTestMultiDouble);
     runTest(pvaClientTestNTMultiChannel);
+
+    epicsExit(0);
 }
 

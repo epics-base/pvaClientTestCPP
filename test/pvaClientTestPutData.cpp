@@ -52,7 +52,7 @@ static void testPostPut()
     PvaClientPutDataPtr pvaData = PvaClientPutData::create(structure);
     PVStructurePtr pvStructure = pvaData->getPVStructure();
 
-    BitSetPtr change = pvaData->getBitSet();
+    BitSetPtr change = pvaData->getChangedBitSet();
     PVDoublePtr powerValue = pvStructure->getSubField<PVDouble>("power.value");
     PVDoublePtr voltageValue = pvStructure->getSubField<PVDouble>("voltage.value");
     PVDoublePtr currentValue = pvStructure->getSubField<PVDouble>("current.value");
@@ -86,7 +86,7 @@ static void testDouble()
         getSubField<PVDouble>("value");
     pvDouble->put(5.0);
 
-    BitSetPtr change = pvaData->getBitSet();
+    BitSetPtr change = pvaData->getChangedBitSet();
     size_t valueOffset = pvDouble->getFieldOffset();
     testOk(change->cardinality()==1,"1 field changed");
     testOk(change->get(valueOffset),"value changed");
@@ -195,7 +195,7 @@ static void testDoubleArray()
         value[i] = i * 10.0;
     pvalue->replace(freeze(value));
 
-    BitSetPtr change = pvaData->getBitSet();
+    BitSetPtr change = pvaData->getChangedBitSet();
     size_t valueOffset = pvalue->getFieldOffset();
     testOk(change->cardinality()==1,"1 field changed");
     testOk(change->get(valueOffset),"value changed");

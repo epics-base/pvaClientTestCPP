@@ -33,17 +33,6 @@ pvaClientTestPutGet_SRCS = pvaClientTestPutGet
 testHarness_SRCS += pvaClientTestPutGet.cpp 
 TESTS += pvaClientTestPutGet
 
-TESTPROD_HOST += pvaClientTestMultiDouble
-pvaClientTestMultiDouble_SRCS = pvaClientTestMultiDouble
-testHarness_SRCS += pvaClientTestMultiDouble.cpp 
-TESTS += pvaClientTestMultiDouble
-
-TESTPROD_HOST += pvaClientTestNTMultiChannel
-pvaClientTestNTMultiChannel_SRCS = pvaClientTestNTMultiChannel
-testHarness_SRCS += pvaClientTestNTMultiChannel.cpp 
-TESTS += pvaClientTestNTMultiChannel
-
-
 PROD_LIBS += pvaClient pvAccess nt pvData Com
 
 testHarness_SRCS += pvaClientAllTests.c

@@ -47,7 +47,7 @@ static void testDouble()
     PVDoublePtr pvDouble = pvStructure->getSubField<PVDouble>("value");
     size_t valueOffset = pvDouble->getFieldOffset();
 
-    BitSetPtr change = pvaData->getBitSet();
+    BitSetPtr change = pvaData->getChangedBitSet();
     pvDouble->put(5.0);
     change->set(pvDouble->getFieldOffset());
 
@@ -124,7 +124,7 @@ static void testDoubleArray()
     PVDoubleArrayPtr pvalue = pvaData->getPVStructure() ->
         getSubField<PVDoubleArray>("value");
 
-    BitSetPtr change = pvaData->getBitSet();
+    BitSetPtr change = pvaData->getChangedBitSet();
     size_t valueOffset = pvalue->getFieldOffset();
 
     size_t len = 5;

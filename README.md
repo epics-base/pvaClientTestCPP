@@ -1,12 +1,19 @@
 pvaClientTestCPP
 ============
 
-This project provides:
+pvaClientTestCPP provides examples for pvaClient and pvDatabase.
+There are two reasons for a separate repository:
+
+* The examples caused circural dependices between repositories.
+* The examples required a running pvAccess server
+
+pvaClientTestCPP provides the following:
 
 * An EPICS IOC that has both EPICS V3 DBRecords, V4 PVRecords, and pvaSrv for accessing the DBRecords.
-* A test that can be run via "make runtests"
+* examples for pvaClient
+* examples for pvDatabase
+* make runtests
 
-The EPICS IOC is also available for running the examples in pvaClientCPP and pvaClientJava.
 
 Building
 --------
@@ -34,6 +41,6 @@ To start the database
 Status
 ------
 
-* Readyfor release 4.5.0-pre1
+* Readyfor release 4.5.0
 
 

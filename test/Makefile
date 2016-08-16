@@ -41,10 +41,10 @@ PROD_vxWorks = vxTestHarness
 vxTestHarness_SRCS += $(testHarness_SRCS)
 TESTSPEC_vxWorks = vxTestHarness.$(MUNCH_SUFFIX); pvaClientAllTests
 
-PROD_RTEMS += rtemsTestHarness
-rtemsTestHarness_SRCS += rtemsTestHarness.c rtemsConfig.c
-rtemsTestHarness_SRCS += $(testHarness_SRCS)
-TESTSPEC_RTEMS = rtemsTestHarness.$(MUNCH_SUFFIX); pvaClientAllTests
+#PROD_RTEMS += rtemsTestHarness
+#rtemsTestHarness_SRCS += rtemsTestHarness.c rtemsConfig.c
+#rtemsTestHarness_SRCS += $(testHarness_SRCS)
+#TESTSPEC_RTEMS = rtemsTestHarness.$(MUNCH_SUFFIX); pvaClientAllTests
 
 TESTSCRIPTS_HOST += $(TESTS:%=%.t)
 

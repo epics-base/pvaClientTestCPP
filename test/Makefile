@@ -33,7 +33,7 @@ pvaClientTestPutGet_SRCS = pvaClientTestPutGet
 testHarness_SRCS += pvaClientTestPutGet.cpp 
 TESTS += pvaClientTestPutGet
 
-PROD_LIBS += pvaClient pvAccess nt pvData Com
+PROD_LIBS += pvaClient pvAccess nt pvData ca Com
 
 testHarness_SRCS += pvaClientAllTests.c
 

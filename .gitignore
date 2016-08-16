@@ -9,4 +9,5 @@ documentation/*.tag
 envPaths
 configure/*.local
 !configure/ExampleRELEASE.local
-**/O.*
+O.*
+*.log
